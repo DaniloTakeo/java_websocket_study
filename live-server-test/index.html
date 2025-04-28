@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste WebSocket</title>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <button id="connect">Conectar</button>
+    <button id="send">Enviar Mensagem</button>
+    <button id="close">Fechar Conexão</button>
+
+    <div id="messages"></div>
+
+    <script>
+        let socket;
+
+        document.getElementById('connect').onclick = function () {
+            socket = new WebSocket('ws://localhost:8080/websocket');
+
+            socket.onopen = function () {
+                console.log('Conectado ao servidor WebSocket.');
+                document.getElementById('messages').innerHTML += '<p><strong>Conectado!</strong></p>';
+            };
+
+            socket.onmessage = function (event) {
+                console.log('Mensagem recebida:', event.data);
+                document.getElementById('messages').innerHTML += `<p>${event.data}</p>`;
+            };
+
+            socket.onclose = function () {
+                console.log('Conexão fechada.');
+                document.getElementById('messages').innerHTML += '<p><em>Conexão fechada</em></p>';
+            };
+
+            socket.onerror = function (error) {
+                console.error('Erro:', error);
+            };
+        };
+
+        document.getElementById('send').onclick = function () {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send('Olá, servidor!');
+            }
+        };
+
+        document.getElementById('close').onclick = function () {
+            if (socket) {
+                socket.close();
+            }
+        };
+    </script>
+</body>
+</html>

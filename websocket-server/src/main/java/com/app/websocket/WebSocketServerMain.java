@@ -1,8 +1,5 @@
 package com.app.websocket;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.glassfish.tyrus.server.Server;
 
 public class WebSocketServerMain {
@@ -10,10 +7,7 @@ public class WebSocketServerMain {
     public static void main(String[] args) {
         // Configura o servidor WebSocket para usar o endpoint definido
         
-        Map<String, Object> serverProperties = new HashMap<>();
-        serverProperties.put(Server.STATIC_CONTENT_ROOT, "/");
-
-        Server server = new Server("localhost", 8080, "/websocket", serverProperties, WebSocketServer.class);
+        Server server = new Server("localhost", 8080, "/", null, WebSocketServer.class);
         
         try {
             // Inicia o servidor

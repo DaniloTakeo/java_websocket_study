@@ -19,7 +19,8 @@ public class WebSocketServer {
 	@OnMessage
     public String onMessage(String message, Session session) {
         System.out.println("Mensagem recebida: " + message);
-        return "Mensagem recebida: " + message; // Responde de volta ao cliente
+        // Responder com a mesma mensagem, pode ser personalizado
+        return "Servidor respondeu: " + message;
     }
 	
 	@OnClose
