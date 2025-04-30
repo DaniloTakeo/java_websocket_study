@@ -1,53 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Teste WebSocket</title>
+    <title>Cliente WebSocket</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #messages p { margin: 4px 0; }
+        .sent { color: blue; }
+        .received { color: green; }
+        .system { color: gray; font-style: italic; }
+    </style>
 </head>
 <body>
-    <h1>WebSocket Test</h1>
+    <h1>Cliente WebSocket</h1>
+    
+    <input type="text" id="messageInput" placeholder="Digite sua mensagem" />
     <button id="connect">Conectar</button>
-    <button id="send">Enviar Mensagem</button>
+    <button id="send">Enviar</button>
     <button id="close">Fechar Conexão</button>
 
+    <h3>Mensagens:</h3>
     <div id="messages"></div>
 
     <script>
         let socket;
 
+        const messagesDiv = document.getElementById('messages');
+        const input = document.getElementById('messageInput');
+
+        function logMessage(message, type) {
+            const p = document.createElement('p');
+            p.className = type;
+            p.textContent = message;
+            messagesDiv.appendChild(p);
+        }
+
         document.getElementById('connect').onclick = function () {
             socket = new WebSocket('ws://localhost:8080/websocket');
 
             socket.onopen = function () {
-                console.log('Conectado ao servidor WebSocket.');
-                document.getElementById('messages').innerHTML += '<p><strong>Conectado!</strong></p>';
+                logMessage('Conectado ao servidor WebSocket.', 'system');
             };
 
             socket.onmessage = function (event) {
-                console.log('Mensagem recebida:', event.data);
-                document.getElementById('messages').innerHTML += `<p>${event.data}</p>`;
+                logMessage('Recebido: ' + event.data, 'received');
             };
 
             socket.onclose = function () {
-                console.log('Conexão fechada.');
-                document.getElementById('messages').innerHTML += '<p><em>Conexão fechada</em></p>';
+                logMessage('Conexão fechada.', 'system');
             };
 
             socket.onerror = function (error) {
-                console.error('Erro:', error);
+                logMessage('Erro: ' + error.message, 'system');
             };
         };
 
         document.getElementById('send').onclick = function () {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send('Olá, servidor!');
+            const msg = input.value;
+            if (socket && socket.readyState === WebSocket.OPEN && msg) {
+                socket.send(msg);
+                logMessage('Enviado: ' + msg, 'sent');
+                input.value = '';
             }
         };
 
         document.getElementById('close').onclick = function () {
-            if (socket) {
-                socket.close();
-            }
+            if (socket) socket.close();
         };
     </script>
 </body>
