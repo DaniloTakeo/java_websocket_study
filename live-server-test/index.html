@@ -1,72 +1,81 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Cliente WebSocket</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        #messages p { margin: 4px 0; }
-        .sent { color: blue; }
-        .received { color: green; }
-        .system { color: gray; font-style: italic; }
-    </style>
+  <meta charset="UTF-8">
+  <title>WebSocket Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #messages p { margin: 4px 0; }
+    .sent { color: blue; }
+    .received { color: green; }
+    .system { color: gray; font-style: italic; }
+  </style>
 </head>
 <body>
-    <h1>Cliente WebSocket</h1>
-    
-    <input type="text" id="messageInput" placeholder="Digite sua mensagem" />
-    <button id="connect">Conectar</button>
-    <button id="send">Enviar</button>
-    <button id="close">Fechar Conexão</button>
+  <h1>Chat com WebSocket</h1>
 
-    <h3>Mensagens:</h3>
-    <div id="messages"></div>
+  <label>Apelido: <input type="text" id="nickname" /></label><br><br>
+  <input type="text" id="messageInput" placeholder="Digite sua mensagem" />
+  <button id="connect">Conectar</button>
+  <button id="send">Enviar</button>
+  <button id="close">Fechar Conexão</button>
 
-    <script>
-        let socket;
+  <h3>Mensagens:</h3>
+  <div id="messages"></div>
 
-        const messagesDiv = document.getElementById('messages');
-        const input = document.getElementById('messageInput');
+  <script>
+    let socket;
+    let isFirstMessage = true;
 
-        function logMessage(message, type) {
-            const p = document.createElement('p');
-            p.className = type;
-            p.textContent = message;
-            messagesDiv.appendChild(p);
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('messageInput');
+    const nicknameInput = document.getElementById('nickname');
+
+    function logMessage(message, type) {
+      const p = document.createElement('p');
+      p.className = type;
+      p.textContent = message;
+      messagesDiv.appendChild(p);
+    }
+
+    document.getElementById('connect').onclick = function () {
+      socket = new WebSocket('ws://localhost:8080/websocket');
+      isFirstMessage = true;
+
+      socket.onopen = function () {
+        logMessage('Conectado ao servidor WebSocket.', 'system');
+        const nickname = nicknameInput.value.trim();
+        if (nickname) {
+          socket.send(JSON.stringify({ type: 'init', nickname }));
+          isFirstMessage = false;
         }
+      };
 
-        document.getElementById('connect').onclick = function () {
-            socket = new WebSocket('ws://localhost:8080/websocket');
+      socket.onmessage = function (event) {
+        logMessage('Recebido: ' + event.data, 'received');
+      };
 
-            socket.onopen = function () {
-                logMessage('Conectado ao servidor WebSocket.', 'system');
-            };
+      socket.onclose = function () {
+        logMessage('Conexão fechada.', 'system');
+      };
 
-            socket.onmessage = function (event) {
-                logMessage('Recebido: ' + event.data, 'received');
-            };
+      socket.onerror = function (error) {
+        logMessage('Erro: ' + error.message, 'system');
+      };
+    };
 
-            socket.onclose = function () {
-                logMessage('Conexão fechada.', 'system');
-            };
+    document.getElementById('send').onclick = function () {
+      const msg = input.value;
+      if (socket && socket.readyState === WebSocket.OPEN && msg) {
+        socket.send(JSON.stringify({ type: 'message', content: msg }));
+        logMessage('Enviado: ' + msg, 'sent');
+        input.value = '';
+      }
+    };
 
-            socket.onerror = function (error) {
-                logMessage('Erro: ' + error.message, 'system');
-            };
-        };
-
-        document.getElementById('send').onclick = function () {
-            const msg = input.value;
-            if (socket && socket.readyState === WebSocket.OPEN && msg) {
-                socket.send(msg);
-                logMessage('Enviado: ' + msg, 'sent');
-                input.value = '';
-            }
-        };
-
-        document.getElementById('close').onclick = function () {
-            if (socket) socket.close();
-        };
-    </script>
+    document.getElementById('close').onclick = function () {
+      if (socket) socket.close();
+    };
+  </script>
 </body>
 </html>
