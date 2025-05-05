@@ -32,7 +32,7 @@ public class WebSocketServer {
     }
 
     @OnMessage
-    public void onMessage(String message, Session session) {
+    public void onMessage(String message, Session session) throws IOException {
         JSONObject json = new JSONObject(message);
 
         if (json.getString("type").equals("init")) {
@@ -44,6 +44,43 @@ public class WebSocketServer {
             String content = json.getString("content");
             String nickname = nicknames.getOrDefault(session, "Anônimo");
             broadcast("💬 " + nickname + ": " + content);
+        } else if (json.getString("type").equals("privateMessage")) {
+            String from = nicknames.get(session);
+            String to = json.getString("to");
+            String content = json.getString("content");
+
+            Session targetSession = null;
+
+            for (Map.Entry<Session, String> entry : nicknames.entrySet()) {
+                if (entry.getValue().equals(to)) {
+                    targetSession = entry.getKey();
+                    break;
+                }
+            }
+
+            if (targetSession != null && targetSession.isOpen()) {
+                JSONObject privateMsg = new JSONObject();
+                privateMsg.put("type", "privateMessage");
+                privateMsg.put("from", from);
+                privateMsg.put("content", content);
+
+                try {
+                    targetSession.getBasicRemote().sendText(privateMsg.toString());
+
+                    // Opcional: confirma para o remetente que foi enviado
+                    session.getBasicRemote().sendText(
+                        new JSONObject()
+                            .put("type", "privateMessage")
+                            .put("from", "Você para " + to)
+                            .put("content", content)
+                            .toString()
+                    );
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                session.getBasicRemote().sendText("❌ Usuário não encontrado: " + to);
+            }
         }
     }
 

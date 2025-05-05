@@ -44,6 +44,11 @@
   <h3>Usuários Online:</h3>
   <ul id="userList"></ul>
 
+  <h3>Mensagem Privada</h3>
+  <input id="privateTo" placeholder="Para (nickname)">
+  <input id="privateMessage" placeholder="Mensagem privada">
+  <button onclick="sendPrivate()">Enviar</button>
+
   <script>
     let socket;
     let isFirstMessage = true;
@@ -57,6 +62,20 @@
       p.className = type;
       p.textContent = message;
       messagesDiv.appendChild(p);
+    }
+
+    function sendPrivate() {
+      const to = document.getElementById('privateTo').value;
+      const message = document.getElementById('privateMessage').value;
+
+      if (to && message) {
+        socket.send(JSON.stringify({
+          type: 'privateMessage',
+          to: to,
+          content: message
+        }));
+        document.getElementById('privateMessage').value = '';
+      }
     }
 
     document.getElementById('connect').onclick = function () {
@@ -86,6 +105,10 @@
           } else {
             logMessage(event.data, 'received');
           }
+
+          if (data.type === 'privateMessage') {
+            logMessage(`🔒 ${data.from}: ${data.content}`, 'private');
+          }
         } catch (e) {
           logMessage(event.data, 'received');
         }
@@ -112,6 +135,7 @@
     document.getElementById('close').onclick = function () {
       if (socket) socket.close();
     };
+
   </script>
 </body>
 
