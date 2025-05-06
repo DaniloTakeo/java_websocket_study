@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <audio id="notifSound" src="notification.mp3" preload="auto"></audio>
   <title>WebSocket Chat</title>
   <style>
     body {
@@ -94,7 +95,9 @@
       socket.onmessage = function (event) {
         try {
           const data = JSON.parse(event.data);
+
           if (data.type === 'userList') {
+            // atualiza lista de usuários
             const list = document.getElementById('userList');
             list.innerHTML = '';
             data.users.forEach(user => {
@@ -102,15 +105,16 @@
               li.textContent = user;
               list.appendChild(li);
             });
+          } else if (data.type === 'privateMessage') {
+            logMessage(`🔒 ${data.from}: ${data.content}`, 'private');
+            notifSound.play();
           } else {
             logMessage(event.data, 'received');
-          }
-
-          if (data.type === 'privateMessage') {
-            logMessage(`🔒 ${data.from}: ${data.content}`, 'private');
+            notifSound.play();
           }
         } catch (e) {
           logMessage(event.data, 'received');
+          notifSound.play();
         }
       };
 
