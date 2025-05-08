@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  tomcat:
+    image: tomcat:9.0
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./websocket-server/target/servidor-websocket.war:/usr/local/tomcat/webapps/servidor-websocket.war
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./live-server-test:/usr/share/nginx/html:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - tomcat

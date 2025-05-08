@@ -49,6 +49,7 @@
   <input id="privateTo" placeholder="Para (nickname)">
   <input id="privateMessage" placeholder="Mensagem privada">
   <button onclick="sendPrivate()">Enviar</button>
+  <button onclick="showHistory()">Ver histórico</button>
 
   <script>
     let socket;
@@ -57,12 +58,20 @@
     const messagesDiv = document.getElementById('messages');
     const input = document.getElementById('messageInput');
     const nicknameInput = document.getElementById('nickname');
+    const messageHistory = [];
 
-    function logMessage(message, type) {
-      const p = document.createElement('p');
-      p.className = type;
-      p.textContent = message;
-      messagesDiv.appendChild(p);
+    function logMessage(message, type = 'info') {
+      messageHistory.push({ message, type, timestamp: new Date().toISOString() });
+
+      const log = document.getElementById('messages');
+      const item = document.createElement('li');
+      item.textContent = message;
+
+      if (type === 'private') item.style.fontStyle = 'italic';
+      if (type === 'received') item.style.color = 'blue';
+      if (type === 'sent') item.style.color = 'green';
+
+      log.appendChild(item);
     }
 
     function sendPrivate() {
@@ -79,8 +88,23 @@
       }
     }
 
+    function showHistory() {
+      const log = document.getElementById('messages');
+      log.innerHTML = '';
+      messageHistory.forEach(entry => {
+        const item = document.createElement('li');
+        item.textContent = `[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.message}`;
+
+        if (entry.type === 'private') item.style.fontStyle = 'italic';
+        if (entry.type === 'received') item.style.color = 'blue';
+        if (entry.type === 'sent') item.style.color = 'green';
+
+        log.appendChild(item);
+      });
+    }
+
     document.getElementById('connect').onclick = function () {
-      socket = new WebSocket('ws://localhost:8080/websocket');
+      socket = new WebSocket("ws://localhost:8080/servidor-websocket/websocket");
       isFirstMessage = true;
 
       socket.onopen = function () {
